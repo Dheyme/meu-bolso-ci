@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'IMAGE_TAG',
+            description: 'Tag da imagem de origem (ex: dev-v1.0.0)'
+        )
+        choice(
+            name: 'TARGET_ENV',
+            choices: ['stg', 'prod'],
+            description: 'Ambiente de destino'
+        )
+    }
+
+    stages {
+
+        stage('Validate promotion flow') {
+            steps {
+                script {
+                    if (params.TARGET_ENV == 'prod' && params.IMAGE_TAG.startsWith('dev')) {
+                        error "Promoção direta de DEV para PROD não é permitida!"
+                    }
+                }
+            }
+        }
+
+        stage('Promote image') {
+            steps {
+                script {
+                    def newTag = params.IMAGE_TAG.replace('dev', params.TARGET_ENV)
+                    echo "Promovendo imagem ${params.IMAGE_TAG} → ${newTag}"
+
+                    sh """
+                        docker pull meu-bolso-api:${params.IMAGE_TAG}
+                        docker tag meu-bolso-api:${params.IMAGE_TAG} meu-bolso-api:${newTag}
+                    """
+                }
+            }
+        }
+
+        stage('Promotion done') {
+            steps {
+                echo "Imagem promovida com sucesso para ${params.TARGET_ENV}"
+                echo "Pronto para deploy manual"
+            }
+        }
+    }
+}
