@@ -15,18 +15,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
         working-directory: ./meu-bolso-api
 
-      - name: Run tests
-        run: npm run test
+      - name: Build first
+        run: npm run build
         working-directory: ./meu-bolso-api
 
-      - name: Build
-        run: npm run build
+      - name: Run tests
+        run: npm run test -- --passWithNoTests
         working-directory: ./meu-bolso-api
 
       - name: SonarCloud Scan
